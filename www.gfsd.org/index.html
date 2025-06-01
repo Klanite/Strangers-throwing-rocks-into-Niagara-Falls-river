@@ -1,0 +1,165 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访问受限</title>
+    <style>
+        body {
+            font-family: Arial, 'Microsoft YaHei', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #d32f2f;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        .code {
+            font-weight: bold;
+            color: #b71c1c;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .flag {
+            width: 80px;
+            margin-bottom: 20px;
+        }
+        audio {
+            display: none; /* Hides the audio player controls */
+        }
+        .audio-prompt {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #d32f2f;
+        }
+        .audio-button {
+            background-color: #d32f2f;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none; /* Hidden by default, shown if autoplay fails */
+        }
+        .audio-button:hover {
+            background-color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_the_People%27s_Republic_of_China.svg" alt="Chinese National Flag" class="flag">
+        <h1>访问受限</h1>
+        <p>根据国家法规，此网站或内容已被限制访问。</p>
+        <p>原因：<span class="code">[已屏蔽]</span></p>
+        <p>请联系您的本地互联网服务提供商以获取更多信息或申请解除限制。</p>
+        <p class="audio-prompt" id="audioPrompt" style="display: none;">如未听到警告音，请点击下方按钮启用音频。</p>
+        <button class="audio-button" id="playAudioButton" onclick="playAudio()">播放警告音</button>
+        <p class="footer">参考代码：CCP-RESTRICT-001</p>
+    </div>
+    <audio id="alertAudio">
+        <source src="https://audio-previews.elements.envatousercontent.com/files/152639368/preview.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show extended alert message
+            alert("警告：此网站已被限制访问。根据国家法规，访问此内容已被禁止。请遵守相关法律法规，并联系您的互联网服务提供商以获取更多信息。");
+
+            // Attempt to play audio immediately
+            var audio = document.getElementById("alertAudio");
+            var playButton = document.getElementById("playAudioButton");
+            var audioPrompt = document.getElementById("audioPrompt");
+
+            // Try direct play
+            audio.play().then(function() {
+                console.log("Audio played successfully");
+            }).catch(function(error) {
+                console.log("Direct autoplay prevented: ", error);
+                // Show fallback button and prompt
+                audioPrompt.style.display = "block";
+                playButton.style.display = "inline-block";
+                // Automatically trigger button click to simulate user interaction
+                playButton.click();
+            });
+        });
+
+        // Function to play audio when button is clicked (manually or programmatically)
+        function playAudio() {
+            var audio = document.getElementById("alertAudio");
+            audio.play().then(function() {
+                console.log("Audio played successfully");
+                // Hide prompt and button after successful playback
+                document.getElementById("audioPrompt").style.display = "none";
+                document.getElementById("playAudioButton").style.display = "none";
+            }).catch(function(error) {
+                console.log("Audio play failed: ", error);
+            });
+        }
+    </script>
+</body>
+</html>
