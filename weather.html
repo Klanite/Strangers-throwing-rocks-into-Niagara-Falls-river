@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Client</title>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes weatherTransition {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a3c5a, #2a5c8a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s ease-out;
+            will-change: transform;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 3rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1200px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.5);
+            animation: fadeIn 0.8s ease-out;
+            overflow: hidden;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.3));
+            border-radius: 15px 15px 0 0;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(255,255,255,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            position: relative;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: slideIn 0.5s ease-out;
+            padding: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.5);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 1px solid rgba(204,204,204,0.8);
+            border-radius: 8px;
+            font-size: 18px;
+            background: rgba(255,255,255,0.9);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            color: #333;
+            transition: all 0.3s ease;
+            transform: translateZ(0);
+        }
+
+        input:focus {
+            outline: none;
+            background: rgba(255,255,255,0.95);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1), 0 0 0 2px rgba(74,144,226,0.3);
+            transform: translateY(-2px);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(to bottom, rgba(74,144,226,0.9), rgba(53,122,189,0.9));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            font-size: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        button:hover {
+            background: linear-gradient(to bottom, rgba(53,122,189,0.9), rgba(35,92,138,0.9));
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 
+                0 1px 3px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.2);
+        }
+
+        .weather-info {
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            max-width: 1000px;
+            margin: 0 auto;
+            animation: weatherTransition 0.5s ease-out;
+            border: 1px solid rgba(255,255,255,0.5);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .weather-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, rgba(74,144,226,0.8), rgba(53,122,189,0.8));
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .weather-info::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(255,255,255,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .weather-info h2 {
+            margin-bottom: 20px;
+            color: #2a5c8a;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+            font-size: 32px;
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+        }
+
+        .temperature {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #2a5c8a;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.9);
+            padding: 20px 40px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.5);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .temperature::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(255,255,255,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .description {
+            color: #2a5c8a;
+            margin-bottom: 30px;
+            font-size: 24px;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+            animation: fadeIn 0.5s ease-out 0.2s backwards;
+            background: rgba(255,255,255,0.5);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 
+                0 2px 5px rgba(0,0,0,0.1),
+                inset 0 0 0 1px rgba(255,255,255,0.5);
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(42,92,138,0.2);
+            animation: fadeIn 0.5s ease-out 0.4s backwards;
+        }
+
+        .detail-item {
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.5);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .detail-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(255,255,255,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .detail-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 
+                0 5px 15px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.8),
+                inset 0 -1px 0 rgba(0,0,0,0.1);
+        }
+
+        .detail-item span {
+            display: block;
+            color: #2a5c8a;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+        }
+
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 
+                0 3px 10px rgba(0,0,0,0.1),
+                inset 0 0 0 1px rgba(255,255,255,0.5);
+            animation: fadeIn 0.5s ease-out;
+            backdrop-filter: blur(5px);
+        }
+
+        .suggestions {
+            position: absolute;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            width: calc(100% - 120px);
+            display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            margin-top: 5px;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(238,238,238,0.8);
+            color: #333;
+            animation: slideIn 0.3s ease-out;
+            background: rgba(255,255,255,0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transform: translateZ(0);
+        }
+
+        .suggestion-item:hover {
+            background: rgba(240,247,255,0.9);
+            transform: translateX(5px);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(74,144,226,0.3);
+            border-radius: 50%;
+            border-top-color: #4a90e2;
+            animation: rotate 1s infinite linear;
+            box-shadow: 
+                0 0 20px rgba(74,144,226,0.3),
+                inset 0 0 10px rgba(74,144,226,0.3);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: linear-gradient(to bottom,
+                #f0f0f0,
+                #e6e6e6);
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom,
+                #4a90e2,
+                #357abd);
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.2);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to bottom,
+                #357abd,
+                #2a5c8a);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+                width: 95%;
+            }
+
+            .details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .temperature {
+                font-size: 4rem;
+                padding: 15px 30px;
+            }
+
+            .weather-info h2 {
+                font-size: 24px;
+            }
+
+            .description {
+                font-size: 20px;
+            }
+        }
+
+        .alert-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to right, rgba(255, 87, 34, 0.9), rgba(255, 152, 0, 0.9));
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            animation: slideDown 0.5s ease-out;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .alert-bar::before {
+            content: '⚠️';
+            margin-right: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        .alert-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right,
+                rgba(255,255,255,0.4),
+                rgba(255,255,255,0.1));
+            animation: shimmer 2s infinite linear;
+        }
+
+        /* Adjust container margin when alert is shown */
+        .container.with-alert {
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-bar" id="alertBar"></div>
+    <div class="container" id="mainContainer">
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Enter city name" autocomplete="off">
+            <button onclick="getWeather()">Search</button>
+        </div>
+        <div class="loading" id="loading"></div>
+        <div class="suggestions" id="suggestions"></div>
+        <div class="error" id="error">City not found. Please try again.</div>
+        <div class="weather-info" id="weatherInfo" style="display: none;">
+            <h2 id="cityName"></h2>
+            <div class="temperature" id="temperature"></div>
+            <div class="description" id="description"></div>
+            <div class="details">
+                <div class="detail-item">
+                    <span>Humidity</span>
+                    <div id="humidity"></div>
+                </div>
+                <div class="detail-item">
+                    <span>Wind Speed</span>
+                    <div id="windSpeed"></div>
+                </div>
+                <div class="detail-item">
+                    <span>Feels Like</span>
+                    <div id="feelsLike"></div>
+                </div>
+                <div class="detail-item">
+                    <span>Pressure</span>
+                    <div id="pressure"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cities = [
+            // Major International Cities
+            "London", "Paris", "Tokyo", "Sydney", "Berlin", "Rome", "Madrid", "Amsterdam", "Vienna", "Barcelona",
+            "Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City", "Hamilton", "Kitchener",
+            
+            // New York State Cities
+            "Albany", "Amsterdam", "Auburn", "Batavia", "Beacon", "Binghamton", "Buffalo", "Canandaigua", "Cohoes", "Corning",
+            "Cortland", "Dunkirk", "Elmira", "Fulton", "Geneva", "Glen Cove", "Glens Falls", "Gloversville", "Hornell", "Hudson",
+            "Ithaca", "Jamestown", "Johnstown", "Kingston", "Lackawanna", "Little Falls", "Lockport", "Long Beach", "Mechanicville", "Middletown",
+            "Mount Vernon", "New Rochelle", "New York City", "Newburgh", "Niagara Falls", "North Tonawanda", "Norwich", "Ogdensburg", "Olean", "Oneida",
+            "Oneonta", "Oswego", "Peekskill", "Plattsburgh", "Port Jervis", "Poughkeepsie", "Rensselaer", "Rochester", "Rome", "Salamanca",
+            "Saratoga Springs", "Schenectady", "Sherrill", "Syracuse", "Tonawanda", "Troy", "Utica", "Watertown", "Watervliet", "White Plains",
+            "Yonkers", "Adams", "Addison", "Afton", "Akron", "Albion", "Alden", "Alexandria Bay", "Alfred", "Allegany",
+            "Altamont", "Amityville", "Andes", "Angelica", "Angola", "Antwerp", "Arcade", "Ardsley", "Argyle", "Arkport",
+            "Arlington", "Ashland", "Athens", "Attica", "Aurora", "Avon", "Babylon", "Baldwin", "Ballston Spa", "Balmville",
+            "Barker", "Batavia", "Bath", "Bay Shore", "Bayport", "Beacon", "Bedford", "Bellerose", "Bellmore", "Bellport",
+            "Belmont", "Bergen", "Bethpage", "Big Flats", "Binghamton", "Black River", "Blasdell", "Bloomfield", "Blue Point", "Bohemia",
+            "Bolivar", "Bolton Landing", "Boonville", "Brewster", "Briarcliff Manor", "Bridgehampton", "Brighton", "Brockport", "Bronxville", "Brookhaven",
+            "Brooklyn", "Brownville", "Buchanan", "Buffalo", "Burnt Hills", "Cairo", "Caledonia", "Calverton", "Camillus", "Canajoharie",
+            "Canandaigua", "Canastota", "Canton", "Carmel", "Carthage", "Castleton-on-Hudson", "Catskill", "Cazenovia", "Cedarhurst", "Celoron",
+            "Central Islip", "Central Square", "Central Valley", "Chappaqua", "Chateaugay", "Chatham", "Cheektowaga", "Cherry Creek", "Chester", "Chestertown",
+            "Chittenango", "Churchville", "Clarence", "Clayton", "Clifton Springs", "Clinton", "Clyde", "Cobleskill", "Cohoes", "Cold Spring",
+            "Cold Spring Harbor", "College Point", "Collins", "Colonie", "Commack", "Congers", "Constantia", "Cooperstown", "Copiague", "Coram",
+            "Corning", "Cornwall", "Cortland", "Coxsackie", "Croton-on-Hudson", "Cuba", "Dansville", "Deer Park", "Delhi", "Delmar",
+            "Depew", "Deposit", "Dexter", "Dobbs Ferry", "Dolgeville", "Dover Plains", "Dryden", "Dundee", "Dunkirk", "Earlville",
+            "East Aurora", "East Hampton", "East Islip", "East Meadow", "East Northport", "East Patchogue", "East Quogue", "East Rochester", "East Rockaway", "East Setauket",
+            "East Syracuse", "East Williston", "Eastchester", "Eden", "Edmeston", "Elbridge", "Elizabethtown", "Ellenville", "Elma", "Elmira",
+            "Elmira Heights", "Elmont", "Elmsford", "Endicott", "Endwell", "Fairport", "Falconer", "Farmingdale", "Farmingville", "Fayetteville",
+            "Fishkill", "Fleischmanns", "Floral Park", "Florida", "Flushing", "Fonda", "Fort Ann", "Fort Edward", "Fort Plain", "Frankfort",
+            "Franklin Square", "Franklinville", "Fredonia", "Freeport", "Fulton", "Fultonville", "Garden City", "Gardiner", "Gasport", "Geneseo",
+            "Geneva", "Glen Cove", "Glen Head", "Glens Falls", "Glenville", "Gloversville", "Goshen", "Gouverneur", "Gowanda", "Grand Island",
+            "Granville", "Great Neck", "Great River", "Green Island", "Greenburgh", "Greene", "Greenport", "Greenvale", "Greenville", "Greenwich",
+            "Greenwood Lake", "Groton", "Hamburg", "Hamilton", "Hammond", "Hampton Bays", "Hancock", "Harrison", "Hartsdale", "Hastings-on-Hudson",
+            "Hauppauge", "Haverstraw", "Hawthorne", "Hempstead", "Henrietta", "Hercules", "Herkimer", "Hewlett", "Hicksville", "Highland",
+            "Highland Falls", "Hilton", "Holbrook", "Holley", "Hollis", "Homer", "Honeoye Falls", "Hoosick Falls", "Hornell", "Horseheads",
+            "Hudson", "Hudson Falls", "Huntington", "Huntington Station", "Hurley", "Hyde Park", "Ilion", "Inwood", "Irondequoit", "Irvington",
+            "Island Park", "Islip", "Ithaca", "Jackson Heights", "Jamestown", "Jefferson Valley", "Jericho", "Johnson City", "Johnstown", "Jordan",
+            "Katonah", "Kenmore", "Kew Gardens", "Kinderhook", "Kings Park", "Kingston", "Lackawanna", "Lake George", "Lake Grove", "Lake Luzerne",
+            "Lake Placid", "Lake Ronkonkoma", "Lake Success", "Lancaster", "Larchmont", "Latham", "Laurel", "Laurel Hollow", "Lawrence", "Le Roy",
+            "Levittown", "Lewiston", "Liberty", "Lindenhurst", "Little Falls", "Little Neck", "Liverpool", "Livingston Manor", "Livonia", "Lockport",
+            "Locust Valley", "Long Beach", "Lynbrook", "Lyons", "Macedon", "Malone", "Malverne", "Mamaroneck", "Manhasset", "Manhattan",
+            "Manlius", "Mannsville", "Marathon", "Marcellus", "Marcy", "Margaretville", "Massapequa", "Massapequa Park", "Massena", "Mastic",
+            "Mastic Beach", "Mattituck", "Maybrook", "Mayville", "Mc Graw", "Mechanicville", "Medford", "Medina", "Melville", "Menands",
+            "Merrick", "Middle Island", "Middle Village", "Middletown", "Milford", "Millbrook", "Miller Place", "Mineola", "Minoa", "Mohawk",
+            "Monroe", "Monsey", "Monticello", "Montour Falls", "Montrose", "Moravia", "Moriches", "Morrisville", "Mount Kisco", "Mount Morris",
+            "Mount Sinai", "Mount Vernon", "Nanuet", "Nassau", "Nesconset", "New City", "New Hartford", "New Hyde Park", "New Paltz", "New Rochelle",
+            "New Windsor", "New York Mills", "Newark", "Newburgh", "Newfane", "Niagara Falls", "Niskayuna", "North Babylon", "North Bellmore", "North Massapequa",
+            "North Merrick", "North New Hyde Park", "North Tonawanda", "North Valley Stream", "Northport", "Northville", "Norwich", "Nyack", "Oakdale", "Oceanside",
+            "Ogdensburg", "Olean", "Oneida", "Oneonta", "Ontario", "Orangeburg", "Orchard Park", "Oriskany", "Ossining", "Oswego",
+            "Owego", "Oxford", "Oyster Bay", "Patchogue", "Pawling", "Pearl River", "Peekskill", "Pelham", "Penfield", "Perry",
+            "Peru", "Phelps", "Phoenix", "Piermont", "Pine Bush", "Pine Plains", "Pittsford", "Plainedge", "Plainview", "Plattsburgh",
+            "Pleasant Valley", "Pleasantville", "Pomona", "Port Chester", "Port Jefferson", "Port Jefferson Station", "Port Jervis", "Port Washington", "Potsdam", "Poughkeepsie",
+            "Pulaski", "Putnam Valley", "Queens", "Queensbury", "Randolph", "Ransomville", "Red Hook", "Redford", "Rensselaer", "Rhinebeck",
+            "Richfield Springs", "Richmond Hill", "Ridge", "Ridgewood", "Riverhead", "Rochester", "Rockville Centre", "Rocky Point", "Rome", "Ronkonkoma",
+            "Roosevelt", "Rosendale", "Roslyn", "Roslyn Heights", "Rotterdam", "Rye", "Rye Brook", "Sag Harbor", "Salamanca", "Salem",
+            "Salisbury", "Saranac Lake", "Saratoga Springs", "Saugerties", "Sayville", "Scarsdale", "Schenectady", "Schoharie", "Scotia", "Sea Cliff",
+            "Seaford", "Selden", "Seneca Falls", "Setauket", "Sharon Springs", "Sherburne", "Sherrill", "Shirley", "Sidney", "Silver Creek",
+            "Skaneateles", "Sleepy Hollow", "Smithtown", "Sodus", "Solvay", "Sound Beach", "South Glens Falls", "South Ozone Park", "Southampton", "Southold",
+            "Sparkill", "Spencerport", "Spring Valley", "Springfield Gardens", "Springville", "St. James", "St. Johnsville", "Staten Island", "Stony Brook", "Stony Point",
+            "Suffern", "Sunnyside", "Syosset", "Syracuse", "Tappan", "Tarrytown", "Thiells", "Tonawanda", "Troy", "Tuckahoe",
+            "Tully", "Tuxedo Park", "Unadilla", "Uniondale", "Unionville", "Utica", "Valatie", "Valley Stream", "Vestal", "Victor",
+            "Walden", "Wallkill", "Walton", "Wantagh", "Wappingers Falls", "Warrensburg", "Warsaw", "Warwick", "Washingtonville", "Waterford",
+            "Waterloo", "Watertown", "Watervliet", "Watkins Glen", "Waverly", "Wayland", "Webster", "Wellsville", "West Babylon", "West Haverstraw",
+            "West Hempstead", "West Islip", "West Nyack", "West Point", "West Sayville", "West Seneca", "Westbury", "Westfield", "Westhampton", "Westhampton Beach",
+            "Westmoreland", "White Plains", "Whitesboro", "Whitestone", "Williamsville", "Williston Park", "Wilson", "Windsor", "Woodbury", "Woodmere",
+            "Woodridge", "Woodstock", "Wurtsboro", "Wyandanch", "Yonkers", "Yorktown Heights", "Youngstown"
+        ];
+
+        const weatherDescriptions = [
+            "Rainbow Tornado", "Flying Pigs", "Dancing Snowflakes", "Meteor Shower", "Alien Invasion",
+            "Dragon Fire", "Unicorn Rain", "Time Warp", "Quantum Weather", "Parallel Universe",
+            "Gravity Reversal", "Dimensional Rift", "Cosmic Storm", "Magic Showers", "Wizard's Mist"
+        ];
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateWeatherData(city) {
+            const temp = getRandomInt(-100, 200); // Absurd temperature range in Fahrenheit
+            const feelsLike = temp + getRandomInt(-50, 50);
+            const humidity = getRandomInt(0, 200); // Over 100% humidity!
+            const windSpeed = getRandomInt(0, 1000); // Extreme wind speeds
+            const pressure = getRandomInt(0, 2000); // Absurd pressure
+            const description = weatherDescriptions[getRandomInt(0, weatherDescriptions.length - 1)];
+
+            return {
+                name: city,
+                main: {
+                    temp: temp,
+                    feels_like: feelsLike,
+                    humidity: humidity,
+                    pressure: pressure
+                },
+                weather: [{
+                    description: description
+                }],
+                wind: {
+                    speed: windSpeed
+                }
+            };
+        }
+
+        const weatherAlerts = [
+            "WARNING: Spontaneous Rainbows Expected!",
+            "ALERT: Gravity Fluctuations Detected!",
+            "CAUTION: Time Dilation in Effect!",
+            "EMERGENCY: Quantum Weather Anomaly!",
+            "NOTICE: Parallel Universe Leakage!",
+            "WARNING: Reality Distortion Field Active!",
+            "ALERT: Dimensional Rift Opening!",
+            "CAUTION: Space-Time Continuum Unstable!",
+            "EMERGENCY: Weather Physics Override!",
+            "NOTICE: Weather Laws Temporarily Suspended!"
+        ];
+
+        function showRandomAlert() {
+            const alertBar = document.getElementById('alertBar');
+            const mainContainer = document.getElementById('mainContainer');
+            
+            if (Math.random() < 0.2) { // 20% chance
+                const randomAlert = weatherAlerts[Math.floor(Math.random() * weatherAlerts.length)];
+                alertBar.textContent = randomAlert;
+                alertBar.style.display = 'block';
+                mainContainer.classList.add('with-alert');
+            } else {
+                alertBar.style.display = 'none';
+                mainContainer.classList.remove('with-alert');
+            }
+        }
+
+        async function getWeather() {
+            const cityInput = document.getElementById('cityInput');
+            const city = cityInput.value.trim();
+            const loading = document.getElementById('loading');
+            const weatherInfo = document.getElementById('weatherInfo');
+            
+            if (!city) {
+                showError();
+                return;
+            }
+
+            // Show loading animation
+            loading.style.display = 'block';
+            weatherInfo.style.display = 'none';
+
+            // Simulate loading delay
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Show random alert
+            showRandomAlert();
+
+            const weatherData = generateWeatherData(city);
+            displayWeather(weatherData);
+
+            // Hide loading animation
+            loading.style.display = 'none';
+        }
+
+        function displayWeather(data) {
+            const weatherInfo = document.getElementById('weatherInfo');
+            const error = document.getElementById('error');
+            
+            weatherInfo.style.display = 'block';
+            error.style.display = 'none';
+
+            // Animate each element with a slight delay
+            document.getElementById('cityName').textContent = data.name;
+            document.getElementById('temperature').textContent = `${data.main.temp}°F`;
+            document.getElementById('description').textContent = data.weather[0].description;
+            document.getElementById('humidity').textContent = `${data.main.humidity}%`;
+            document.getElementById('windSpeed').textContent = `${data.wind.speed} mph`;
+            document.getElementById('feelsLike').textContent = `${data.main.feels_like}°F`;
+            document.getElementById('pressure').textContent = `${data.main.pressure} hPa`;
+        }
+
+        function showError() {
+            const weatherInfo = document.getElementById('weatherInfo');
+            const error = document.getElementById('error');
+            
+            weatherInfo.style.display = 'none';
+            error.style.display = 'block';
+        }
+
+        // City suggestions
+        const cityInput = document.getElementById('cityInput');
+        const suggestionsDiv = document.getElementById('suggestions');
+
+        cityInput.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+            if (value.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            const matches = cities.filter(city => 
+                city.toLowerCase().includes(value)
+            );
+
+            if (matches.length > 0) {
+                suggestionsDiv.innerHTML = matches
+                    .map(city => `<div class="suggestion-item">${city}</div>`)
+                    .join('');
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        suggestionsDiv.addEventListener('click', function(e) {
+            if (e.target.classList.contains('suggestion-item')) {
+                cityInput.value = e.target.textContent;
+                suggestionsDiv.style.display = 'none';
+                getWeather();
+            }
+        });
+
+        // Allow Enter key to trigger search
+        cityInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
